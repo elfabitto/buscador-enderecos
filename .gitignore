@@ -16,10 +16,15 @@ build/
 *.sqlite
 *.sqlite3
 
-# Arquivos de dados
-*.csv
-*.xls
-*.xlsx
+# Arquivos de dados (IMPORTANTE: Remova estas linhas se quiser incluir o CSV no GitHub Pages)
+# Para GitHub Pages, você PRECISA incluir o arquivo CSV
+# Descomente as linhas abaixo apenas se NÃO quiser fazer deploy no GitHub Pages:
+# *.csv
+# *.xls
+# *.xlsx
+
+# Se quiser incluir apenas o arquivo específico, use:
+# !Relatório de Consumo.csv
 
 # IDEs
 .vscode/
