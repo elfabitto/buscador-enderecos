@@ -81,9 +81,13 @@ def buscar_detalhes_logradouro(rua):
     
     # Filtrar por rua exata
     mask = df_enderecos['RUA'] == rua
-    resultados = df_enderecos[mask][['NUM_LIGACAO', 'RUA', 'NÚMERO', 'COMPLEMENTO', 
-                                      'BAIRRO', 'NOM_LOCALIDADE', 'Nº DO HIDROMETRO', 
-                                      'LATITUDE', 'LONGITUDE']]
+    # Incluir DV se a coluna existir
+    colunas_base = ['NUM_LIGACAO', 'RUA', 'NÚMERO', 'COMPLEMENTO',
+                    'BAIRRO', 'NOM_LOCALIDADE', 'Nº DO HIDROMETRO',
+                    'LATITUDE', 'LONGITUDE']
+    if 'DV' in df_enderecos.columns:
+        colunas_base.insert(1, 'DV')
+    resultados = df_enderecos[mask][[c for c in colunas_base if c in df_enderecos.columns]]
     
     # Ordenar por número
     try:
@@ -103,9 +107,13 @@ def buscar_por_hidrometro(hidrometro):
     
     # Buscar por hidrômetro exato
     mask = df_enderecos['Nº DO HIDROMETRO'].astype(str).str.contains(str(hidrometro), na=False, case=False)
-    resultados = df_enderecos[mask][['NUM_LIGACAO', 'RUA', 'NÚMERO', 'COMPLEMENTO', 
-                                      'BAIRRO', 'NOM_LOCALIDADE', 'Nº DO HIDROMETRO',
-                                      'LATITUDE', 'LONGITUDE']]
+    # Incluir DV se a coluna existir
+    colunas_base = ['NUM_LIGACAO', 'RUA', 'NÚMERO', 'COMPLEMENTO',
+                    'BAIRRO', 'NOM_LOCALIDADE', 'Nº DO HIDROMETRO',
+                    'LATITUDE', 'LONGITUDE']
+    if 'DV' in df_enderecos.columns:
+        colunas_base.insert(1, 'DV')
+    resultados = df_enderecos[mask][[c for c in colunas_base if c in df_enderecos.columns]]
     
     # Converter NaN para strings vazias
     resultados = resultados.fillna('')

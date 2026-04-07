@@ -682,6 +682,7 @@
                 html += '<th>Número</th>';
                 html += '<th>Compl.</th>';
                 html += '<th>Matrícula</th>';
+                html += '<th>DV</th>';
                 html += '<th>HD</th>';
                 html += '</tr></thead><tbody>';
                 
@@ -695,6 +696,7 @@
                     const complemento = end.COMPLEMENTO || '-';
                     const hidrometro = end['Nº DO HIDROMETRO'] || '-';
                     const matricula = end.NUM_LIGACAO || '';
+                    const dv = end.DV !== undefined ? end.DV : '';
                     
                     html += `
                         <tr>
@@ -702,6 +704,7 @@
                             <td class="info-cell">${numero}</td>
                             <td class="info-cell">${complemento}</td>
                             <td><span class="badge badge-clickable" onclick="copiarMatricula('${matricula}', event)" title="Clique para copiar">${matricula}</span></td>
+                            <td><span class="badge">${dv}</span></td>
                             <td><span class="badge badge-primary">${hidrometro}</span></td>
                         </tr>
                     `;
@@ -755,6 +758,7 @@
             
             const tableData = enderecos.map(end => {
                 let numero = end['NÚMERO'] || end.NUMERO || 'S/N';
+                const dvPdf = end.DV !== undefined ? String(end.DV) : '';
                 // Remover casas decimais se for número
                 if (numero !== 'S/N' && !isNaN(numero)) {
                     numero = parseInt(numero);
@@ -763,12 +767,12 @@
                 const hidrometro = end['Nº DO HIDROMETRO'] || '-';
                 const matricula = end.NUM_LIGACAO || '';
                 
-                return [rua, numero, complemento, matricula, hidrometro];
+                return [rua, numero, complemento, matricula, dvPdf, hidrometro];
             });
             
             doc.autoTable({
                 startY: 38,
-                head: [['Rua', 'Número', 'Compl.', 'Matrícula', 'HD']],
+                head: [['Rua', 'Número', 'Compl.', 'Matrícula', 'DV', 'HD']],
                 body: tableData,
                 styles: {
                     fontSize: 8,
@@ -835,6 +839,7 @@
                 html += '<th>Número</th>';
                 html += '<th>Compl.</th>';
                 html += '<th>Matrícula</th>';
+                html += '<th>DV</th>';
                 html += '<th>HD</th>';
                 html += '</tr></thead><tbody>';
 
@@ -847,6 +852,7 @@
                     const complemento = end.COMPLEMENTO || '-';
                     const hidrometro = end['Nº DO HIDROMETRO'] || '-';
                     const matricula = end.NUM_LIGACAO || '';
+                    const dv = end.DV !== undefined ? end.DV : '';
                     
                     html += `
                         <tr>
@@ -854,6 +860,7 @@
                             <td class="info-cell">${numero}</td>
                             <td class="info-cell">${complemento}</td>
                             <td><span class="badge badge-clickable" onclick="copiarMatricula('${matricula}', event)" title="Clique para copiar">${matricula}</span></td>
+                            <td><span class="badge">${dv}</span></td>
                             <td><span class="badge badge-primary">${hidrometro}</span></td>
                         </tr>
                     `;
