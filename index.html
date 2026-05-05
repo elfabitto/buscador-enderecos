@@ -551,23 +551,27 @@
                        numero.includes(termo);
             });
 
-            // Remover duplicatas por RUA
+            // Remover duplicatas por RUA + BAIRRO (mesma rua em bairros diferentes = entradas separadas)
             const ruasUnicas = {};
             resultados.forEach(item => {
-                if (!ruasUnicas[item.RUA]) {
-                    ruasUnicas[item.RUA] = item;
+                const chave = `${item.RUA || ''}||${item.BAIRRO || ''}`;
+                if (!ruasUnicas[chave]) {
+                    ruasUnicas[chave] = item;
                 }
             });
 
             return Object.values(ruasUnicas).slice(0, 50);
         }
 
-        function buscarDetalhesLogradouro(rua) {
+        function buscarDetalhesLogradouro(rua, bairro) {
             if (!dadosEnderecos || dadosEnderecos.length === 0) {
                 return [];
             }
 
-            const resultados = dadosEnderecos.filter(item => item.RUA === rua);
+            // Filtrar por RUA e BAIRRO para separar ruas de mesmo nome em bairros diferentes
+            const resultados = dadosEnderecos.filter(item =>
+                item.RUA === rua && (item.BAIRRO || '') === (bairro || '')
+            );
             
             // Ordenar por número
             resultados.sort((a, b) => {
@@ -642,7 +646,7 @@
                     const localidade = item.NOM_LOCALIDADE || '';
                     
                     html += `
-                        <tr onclick="buscarDetalhes('${rua.replace(/'/g, "\\'")}')">
+                        <tr onclick="buscarDetalhes('${rua.replace(/'/g, "\\'")}'.trimEnd(), '${bairro.replace(/'/g, "\\'")}'.trimEnd())">
                             <td class="rua-cell">${rua}</td>
                             <td class="info-cell">${bairro}</td>
                             <td class="info-cell">${localidade}</td>
@@ -733,7 +737,7 @@
             });
         }
 
-        function gerarPDF(rua) {
+        function gerarPDF(rua, bairro) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             
@@ -744,12 +748,13 @@
             doc.setFontSize(12);
             doc.setFont(undefined, 'normal');
             doc.text(`Logradouro: ${rua}`, 14, 25);
+            if (bairro) doc.text(`Bairro: ${bairro}`, 14, 31);
             
             const dataAtual = new Date().toLocaleDateString('pt-BR');
             doc.setFontSize(10);
-            doc.text(`Data: ${dataAtual}`, 14, 32);
+            doc.text(`Data: ${dataAtual}`, 14, bairro ? 37 : 32);
             
-            const enderecos = buscarDetalhesLogradouro(rua);
+            const enderecos = buscarDetalhesLogradouro(rua, bairro);
             
             if (!enderecos || enderecos.length === 0) {
                 alert('Nenhum dado para gerar PDF');
@@ -814,24 +819,27 @@
             }, 2000);
         }
 
-        function buscarDetalhes(rua) {
+        function buscarDetalhes(rua, bairro) {
             resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top: 1rem;">Carregando endereços...</p></div>';
 
             setTimeout(() => {
-                const enderecos = buscarDetalhesLogradouro(rua);
+                const enderecos = buscarDetalhesLogradouro(rua, bairro);
 
                 if (!enderecos || enderecos.length === 0) {
                     resultsDiv.innerHTML = '<div class="no-results">Nenhum endereço encontrado para esta rua</div>';
                     return;
                 }
 
+                const ruaEsc = (rua || '').replace(/'/g, "\\'");
+                const bairroEsc = (bairro || '').replace(/'/g, "\\'");
+
                 let html = '<div class="details-header">';
                 html += `<div>`;
                 html += `<button class="btn-voltar" onclick="location.reload()">← Voltar</button>`;
-                html += `<button class="btn-pdf" onclick="gerarPDF('${rua.replace(/'/g, "\\'")}')">📄 Gerar PDF</button>`;
+                html += `<button class="btn-pdf" onclick="gerarPDF('${ruaEsc}', '${bairroEsc}')">📄 Gerar PDF</button>`;
                 html += `</div>`;
                 html += `<div class="details-title">${rua}</div>`;
-                html += `<div class="details-subtitle">Total de ${enderecos.length} endereço(s)</div>`;
+                html += `<div class="details-subtitle">${bairro ? `Bairro: <strong>${bairro}</strong> &nbsp;|&nbsp; ` : ''}Total de ${enderecos.length} endereço(s)</div>`;
                 html += '</div>';
                 
                 html += '<div class="table-container"><table><thead><tr>';

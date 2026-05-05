@@ -536,8 +536,10 @@
                     html += '</tr></thead><tbody>';
                     
                     data.resultados.forEach(item => {
+                        const ruaEsc = item.RUA.replace(/'/g, "\\'");
+                        const bairroEsc = (item.BAIRRO || '').replace(/'/g, "\\'");
                         html += `
-                            <tr onclick="buscarDetalhes('${item.RUA.replace(/'/g, "\\'")}')">
+                            <tr onclick="buscarDetalhes('${ruaEsc}', '${bairroEsc}')">
                                 <td class="rua-cell">${item.RUA}</td>
                                 <td class="info-cell">${item.BAIRRO}</td>
                                 <td class="info-cell">${item.NOM_LOCALIDADE}</td>
@@ -644,7 +646,7 @@
             });
         }
 
-        function gerarPDF(rua) {
+        function gerarPDF(rua, bairro) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             
@@ -657,14 +659,16 @@
             doc.setFontSize(12);
             doc.setFont(undefined, 'normal');
             doc.text(`Logradouro: ${rua}`, 14, 25);
+            if (bairro) doc.text(`Bairro: ${bairro}`, 14, 31);
             
             // Data
             const dataAtual = new Date().toLocaleDateString('pt-BR');
             doc.setFontSize(10);
-            doc.text(`Data: ${dataAtual}`, 14, 32);
+            doc.text(`Data: ${dataAtual}`, 14, bairro ? 37 : 32);
             
-            // Buscar dados da tabela atual
-            fetch('/detalhes/' + encodeURIComponent(rua))
+            // Buscar dados filtrando por bairro
+            const url = '/detalhes/' + encodeURIComponent(rua) + (bairro ? '?bairro=' + encodeURIComponent(bairro) : '');
+            fetch(url)
                 .then(response => response.json())
                 .then(data => {
                     if (!data.enderecos || data.enderecos.length === 0) {
@@ -690,7 +694,7 @@
                     
                     // Adicionar tabela
                     doc.autoTable({
-                        startY: 38,
+                        startY: bairro ? 43 : 38,
                         head: [['Rua', 'Número', 'Compl.', 'Matrícula', 'HD']],
                         body: tableData,
                         styles: {
@@ -741,10 +745,11 @@
                 });
         }
 
-        function buscarDetalhes(rua) {
+        function buscarDetalhes(rua, bairro) {
             resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top: 1rem;">Carregando endereços...</p></div>';
 
-            fetch('/detalhes/' + encodeURIComponent(rua))
+            const url = '/detalhes/' + encodeURIComponent(rua) + (bairro ? '?bairro=' + encodeURIComponent(bairro) : '');
+            fetch(url)
                 .then(response => response.json())
                 .then(data => {
                     if (!data.enderecos || data.enderecos.length === 0) {
@@ -752,13 +757,16 @@
                         return;
                     }
 
+                    const ruaEsc = (rua || '').replace(/'/g, "\\'");
+                    const bairroEsc = (bairro || '').replace(/'/g, "\\'");
+
                     let html = '<div class="details-header">';
                     html += `<div>`;
                     html += `<button class="btn-voltar" onclick="location.reload()">← Voltar</button>`;
-                    html += `<button class="btn-pdf" onclick="gerarPDF('${rua.replace(/'/g, "\\'")}')">📄 Gerar PDF</button>`;
+                    html += `<button class="btn-pdf" onclick="gerarPDF('${ruaEsc}', '${bairroEsc}')">📄 Gerar PDF</button>`;
                     html += `</div>`;
                     html += `<div class="details-title">${rua}</div>`;
-                    html += `<div class="details-subtitle">Total de ${data.enderecos.length} endereço(s)</div>`;
+                    html += `<div class="details-subtitle">${bairro ? `Bairro: <strong>${bairro}</strong> &nbsp;|&nbsp; ` : ''}Total de ${data.enderecos.length} endereço(s)</div>`;
                     html += '</div>';
                     
                     html += '<div class="table-container"><table><thead><tr>';

@@ -74,13 +74,16 @@ def buscar_enderecos(termo):
     
     return resultados.to_dict('records')
 
-def buscar_detalhes_logradouro(rua):
-    """Busca todos os endereços de um logradouro específico"""
+def buscar_detalhes_logradouro(rua, bairro=None):
+    """Busca todos os enderecos de um logradouro especifico, filtrando por bairro se informado"""
     if df_enderecos is None:
         return []
     
     # Filtrar por rua exata
     mask = df_enderecos['RUA'] == rua
+    # Filtrar por bairro para separar ruas homonimas em bairros diferentes
+    if bairro:
+        mask = mask & (df_enderecos['BAIRRO'].astype(str).str.strip() == bairro.strip())
     # Incluir DV se a coluna existir
     colunas_base = ['NUM_LIGACAO', 'RUA', 'NÚMERO', 'COMPLEMENTO',
                     'BAIRRO', 'NOM_LOCALIDADE', 'Nº DO HIDROMETRO',
@@ -95,7 +98,7 @@ def buscar_detalhes_logradouro(rua):
     except:
         resultados = resultados.sort_values('NÚMERO')
     
-    # Converter NaN para None para JSON válido
+    # Converter NaN para None para JSON valido
     resultados = resultados.fillna('')
     
     return resultados.to_dict('records')
@@ -136,7 +139,8 @@ def buscar():
 
 @app.route('/detalhes/<path:rua>')
 def detalhes(rua):
-    enderecos = buscar_detalhes_logradouro(rua)
+    bairro = request.args.get('bairro', '').strip()
+    enderecos = buscar_detalhes_logradouro(rua, bairro if bairro else None)
     return jsonify({'enderecos': enderecos})
 
 @app.route('/buscar_hidrometro', methods=['POST'])
